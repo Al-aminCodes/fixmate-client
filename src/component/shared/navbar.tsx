@@ -44,7 +44,7 @@ export default function Navbar() {
     "customer") as Role;
 
   const dashboardUrl = dashboardRoutes[role];
-  const profileUrl = `${dashboardUrl}/profile`;
+  const profileUrl = `/dashboard/profile`;
 
   const [loggingOut, setLoggingOut] = useState(false);
 

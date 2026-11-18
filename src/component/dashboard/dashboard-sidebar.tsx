@@ -1,29 +1,30 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "@/lib/auth-client";
 import {
   LayoutDashboard,
   CalendarDays,
   CreditCard,
-  UserRound,
   PlusCircle,
   BriefcaseBusiness,
   ClipboardList,
   Users,
   Wrench,
   Receipt,
+  UserRound,
+  Home,
   LogOut,
-  Settings,
+  ChevronRight,
 } from "lucide-react";
-import { toast } from "sonner";
-
-import { useSession, signOut } from "@/lib/auth-client";
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
@@ -31,9 +32,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-type Role = "customer" | "technician" | "admin";
-
-const dashboardMenus = {
+const menuItems = {
   customer: [
     { title: "Overview", url: "/dashboard/customer", icon: LayoutDashboard },
     {
@@ -46,7 +45,6 @@ const dashboardMenus = {
       url: "/dashboard/customer/payments",
       icon: CreditCard,
     },
-    { title: "Profile", url: "/dashboard/customer/profile", icon: UserRound },
   ],
   technician: [
     { title: "Overview", url: "/dashboard/technician", icon: LayoutDashboard },
@@ -61,11 +59,10 @@ const dashboardMenus = {
       icon: BriefcaseBusiness,
     },
     {
-      title: "Service Requests",
+      title: "Booking Requests",
       url: "/dashboard/technician/requests",
       icon: ClipboardList,
     },
-    { title: "Profile", url: "/dashboard/technician/profile", icon: UserRound },
   ],
   admin: [
     { title: "Overview", url: "/dashboard/admin", icon: LayoutDashboard },
@@ -76,7 +73,7 @@ const dashboardMenus = {
       icon: Wrench,
     },
     {
-      title: "Manage Bookings",
+      title: "All Bookings",
       url: "/dashboard/admin/bookings",
       icon: CalendarDays,
     },
@@ -85,122 +82,172 @@ const dashboardMenus = {
       url: "/dashboard/admin/transactions",
       icon: Receipt,
     },
-    { title: "Profile", url: "/dashboard/admin/profile", icon: UserRound },
   ],
 };
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session, isPending } = useSession();
 
-  const { data: session } = useSession();
   const user = session?.user;
+  const role = user?.role as keyof typeof menuItems | undefined;
+  const items = role ? menuItems[role] : [];
 
-  const role = (user as typeof user & { role?: Role })?.role || "customer";
-
-  const menus = dashboardMenus[role as Role] || dashboardMenus.customer;
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("Signed out successfully");
-      router.replace("/sign-in");
-      router.refresh();
-    } catch {
-      toast.error("Unable to sign out");
-    }
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/sign-in");
+    router.refresh();
   };
 
+  if (isPending) return null;
+
+  const displayRole = role
+    ? role.charAt(0).toUpperCase() + role.slice(1)
+    : "Account";
+
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b p-4">
-        <button
-          onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-left"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold text-white">
-            F
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border bg-background"
+    >
+      {/* Brand */}
+      <SidebarHeader className="border-b border-border px-4 py-5">
+        <Link href="/" className="flex items-center gap-3 overflow-hidden">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <Wrench className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold group-data-[collapsible=icon]:hidden">
-            Fix<span className="text-blue-600">Mate</span>
-          </span>
-        </button>
+
+          <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+            <h2 className="text-xl font-bold tracking-tight">
+              FixMate<span className="text-primary">.</span>
+            </h2>
+            <p className="text-[11px] text-muted-foreground">
+              Repair Service Platform
+            </p>
+          </div>
+        </Link>
       </SidebarHeader>
 
-      <SidebarContent>
+      {/* Navigation */}
+      <SidebarContent className="px-2 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel>
-            {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
+          <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            {displayRole} Menu
           </SidebarGroupLabel>
 
-          <SidebarMenu>
-            {menus.map((item) => {
-              const Icon = item.icon;
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1.5">
+              {items.map((item) => {
+                const isActive =
+                  pathname === item.url ||
+                  (item.url !== `/dashboard/${role}` &&
+                    pathname.startsWith(`${item.url}/`));
 
-              const active =
-                pathname === item.url ||
-                (item.url !== `/dashboard/${role}` &&
-                  pathname.startsWith(`${item.url}/`));
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      isActive={isActive}
+                      onClick={() => router.push(item.url)}
+                      className={`
+                        flex h-11 w-full items-center gap-3 rounded-lg px-3
+                        transition-all duration-200
+                        [&>svg]:!size-[18px] [&>svg]:shrink-0
+                        ${
+                          isActive
+                            ? "bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }
+                      `}
+                    >
+                      <item.icon />
+                      <span className="flex-1 truncate text-sm">
+                        {item.title}
+                      </span>
+                      {isActive && (
+                        <ChevronRight className="ml-auto !size-4 opacity-80" />
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-              return (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    isActive={active}
-                    tooltip={item.title}
-                    onClick={() => router.push(item.url)}
-                  >
-                    <Icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
+        {/* Account links */}
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            Account
+          </SidebarGroupLabel>
+
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1.5">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="My Profile"
+                  isActive={pathname === "/dashboard/profile"}
+                  onClick={() => router.push("/dashboard/profile")}
+                  className="h-11 rounded-lg px-3 [&>svg]:!size-[18px] [&>svg]:shrink-0"
+                >
+                  <UserRound />
+                  <span className="text-sm">My Profile</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Back to Home"
+                  onClick={() => router.push("/")}
+                  className="h-11 rounded-lg px-3 [&>svg]:!size-[18px] [&>svg]:shrink-0"
+                >
+                  <Home />
+                  <span className="text-sm">Back to Home</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-2">
-        <SidebarMenu>
+      {/* User profile and logout */}
+      <SidebarFooter className="border-t border-border p-3">
+        <div className="flex items-center gap-3 overflow-hidden rounded-xl bg-muted/60 p-2.5">
+          {user?.image ? (
+            <img
+              src={user.image}
+              alt={user.name || "User"}
+              className="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-background"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <UserRound className="h-5 w-5" />
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <p className="truncate text-sm font-semibold">
+              {user?.name || "User"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user?.email}
+            </p>
+          </div>
+        </div>
+
+        <SidebarMenu className="mt-2">
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip="Settings"
-              onClick={() => router.push(`/dashboard/${role}/profile`)}
+              tooltip="Sign Out"
+              onClick={handleSignOut}
+              className="h-10 rounded-lg px-3 text-red-500 hover:bg-red-500/10 hover:text-red-600 [&>svg]:!size-[18px]"
             >
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Sign Out" onClick={handleLogout}>
               <LogOut />
-              <span>Sign Out</span>
+              <span className="text-sm font-medium">Sign Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-
-        {user && (
-          <div className="flex items-center gap-2 border-t px-2 py-3 group-data-[collapsible=icon]:hidden">
-            {user.image ? (
-              <img
-                src={user.image}
-                alt={user.name || "Profile"}
-                className="h-9 w-9 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
-                {user.name?.charAt(0).toUpperCase() || "U"}
-              </div>
-            )}
-
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{user.name}</p>
-              <p className="truncate text-xs capitalize text-muted-foreground">
-                {role}
-              </p>
-            </div>
-          </div>
-        )}
       </SidebarFooter>
     </Sidebar>
   );

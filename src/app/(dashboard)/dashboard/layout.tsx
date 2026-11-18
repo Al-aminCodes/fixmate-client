@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-
+import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 
 import {
-  SidebarInset,
   SidebarProvider,
+  SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
@@ -19,21 +18,19 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-
   const { data: session, isPending } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!isPending && !session?.user) {
-      router.replace(`/sign-in?redirectTo=${encodeURIComponent(pathname)}`);
+    if (!isPending && !session) {
+      router.replace("/sign-in");
     }
-  }, [isPending, session, router, pathname]);
+  }, [session, isPending, router]);
 
-  if (isPending || !session?.user) {
+  if (isPending || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <p className="text-muted-foreground">Loading dashboard...</p>
       </div>
     );
   }
@@ -43,20 +40,17 @@ export default function DashboardLayout({
       <DashboardSidebar />
 
       <SidebarInset>
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b bg-background px-4">
+        <header className="flex h-16 items-center gap-3 border-b px-4">
           <SidebarTrigger />
 
-          <Separator orientation="vertical" className="h-5" />
+          <Separator orientation="vertical" className="h-6" />
 
-          <div>
+          <div className="flex-1">
             <h1 className="text-sm font-semibold">FixMate Dashboard</h1>
-            <p className="text-xs text-muted-foreground">
-              Manage your repair services
-            </p>
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-4rem)] flex-1 bg-slate-50 p-4 md:p-6">
+        <main className="min-h-[calc(100vh-4rem)] bg-muted/30 p-4 md:p-6">
           {children}
         </main>
       </SidebarInset>
