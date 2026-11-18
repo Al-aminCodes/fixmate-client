@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import ServiceDetails from "@/components/services/service-details";
-import type { Service } from "@/types/service";
+
+import { Service } from "@/component/services/service-type";
+import ServiceDetails from "@/component/services/service-details";
 
 type Props = {
   params: Promise<{
