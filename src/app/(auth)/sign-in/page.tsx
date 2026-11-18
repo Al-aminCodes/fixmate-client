@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient, signIn } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +55,7 @@ function SignInForm() {
     setLoading(true);
 
     try {
-      const { data, error } = await authClient.signIn.email({
+      const { data, error } = await signIn.email({
         email: email.trim().toLowerCase(),
         password,
       });

@@ -1,17 +1,20 @@
-import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
-
+import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { MongoClient } from "mongodb";
 
-const mongoClient = new MongoClient(process.env.MONGODB_URI!);
-
+const mongoUri = (
+  globalThis as typeof globalThis & {
+    process: { env: Record<string, string | undefined> };
+  }
+).process.env.MONGODB_URL;
+if (!mongoUri) {
+  throw new Error("MONGODB_URI environment variable is not defined");
+}
+const client = new MongoClient(mongoUri);
+const db = client.db("fix-mate");
 export const auth = betterAuth({
-  database: mongodbAdapter(mongoClient.db()),
-
   emailAndPassword: {
     enabled: true,
-    minPasswordLength: 6,
-    maxPasswordLength: 128,
   },
 
   user: {
@@ -35,28 +38,13 @@ export const auth = betterAuth({
       },
     },
   },
-
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user) => {
-          const allowedRoles = ["customer", "technician"];
-
-          const role = allowedRoles.includes(user.role as string)
-            ? user.role
-            : "customer";
-
-          return {
-            data: {
-              ...user,
-              role,
-            },
-          };
-        },
-      },
-    },
-  },
-
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  // socialProviders: {
+  //   google: {
+  //     clientId: process.env.GOOGLE_CLIENT_ID as string, // [!code highlight]
+  //     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, // [!code highlight]
+  //   },
+  // },
+  database: mongodbAdapter(db, {
+    client,
+  }),
 });

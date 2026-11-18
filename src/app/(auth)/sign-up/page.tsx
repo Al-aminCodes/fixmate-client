@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient, signUp } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +26,8 @@ type Role = "customer" | "technician";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -74,7 +76,22 @@ export default function SignUpPage() {
 
     return !Object.values(newErrors).some(Boolean);
   };
+  const handleImageChange = (file: File | null) => {
+    if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -83,13 +100,38 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await authClient.signUp.email({
+      let imageUrl = "";
+
+      // Step 1: Upload image to ImgBB
+      if (image) {
+        const formData = new FormData();
+        formData.append("image", image);
+
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadResult = await uploadResponse.json();
+
+        if (!uploadResponse.ok) {
+          toast.error(uploadResult.message || "Image upload failed");
+          return;
+        }
+
+        imageUrl = uploadResult.imageUrl;
+      }
+
+      // Step 2: Create Better Auth account
+      const { data, error } = await signUp.email({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
         role,
+        image: imageUrl || undefined,
       });
-
+      console.log(data);
+      console.log(error);
       if (error) {
         toast.error(error.message || "Unable to create your account");
         return;
@@ -172,6 +214,25 @@ export default function SignUpPage() {
 
           {errors.email && (
             <p className="text-xs text-red-500">{errors.email}</p>
+          )}
+        </div>
+        {/* Profile Photo */}
+        <div className="space-y-2">
+          <Label htmlFor="image">Profile Photo</Label>
+
+          <Input
+            id="image"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
+          />
+
+          {preview && (
+            <img
+              src={preview}
+              alt="Profile preview"
+              className="h-20 w-20 rounded-full object-cover"
+            />
           )}
         </div>
 
