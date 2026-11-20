@@ -25,56 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { getServiceLimit } from "@/lib/api/services";
 import { Service } from "@/types/service";
 
-// const services = [
-//   {
-//     title: "Smartphone Repair",
-//     category: "Smartphone",
-//     mode: "Shop Drop-off",
-//     price: "৳800",
-//     technician: "Alex Morgan",
-//     image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=700",
-//   },
-//   {
-//     title: "Laptop Servicing",
-//     category: "Laptop & PC",
-//     mode: "Home Visit",
-//     price: "৳1,200",
-//     technician: "David Wilson",
-//     image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700",
-//   },
-//   {
-//     title: "AC Repair & Maintenance",
-//     category: "Air Conditioner",
-//     mode: "Home Visit",
-//     price: "৳1,000",
-//     technician: "Michael Lee",
-//     image: "https://images.unsplash.com/photo-1631545806609-3c7d5b6d9e4d?w=700",
-//   },
-//   {
-//     title: "Refrigerator Repair",
-//     category: "Refrigerator",
-//     mode: "Home Visit",
-//     price: "৳1,500",
-//     technician: "James Brown",
-//     image: "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=700",
-//   },
-//   {
-//     title: "Television Repair",
-//     category: "TV",
-//     mode: "Shop Drop-off",
-//     price: "৳900",
-//     technician: "Robert Smith",
-//     image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=700",
-//   },
-//   {
-//     title: "Washing Machine Repair",
-//     category: "Washing Machine",
-//     mode: "Home Visit",
-//     price: "৳1,200",
-//     technician: "Daniel Martin",
-//     image: "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=700",
-//   },
-// ];
 const services: Service[] = await getServiceLimit();
 const categories = [
   { name: "Smartphone", icon: Smartphone },
@@ -276,7 +226,7 @@ export default function HomePage() {
                     variant="outline"
                     className="mt-5 w-full rounded-xl border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white"
                   >
-                    <Link href="/services">
+                    <Link href={`/services/${service._id}`}>
                       View Details <ArrowRight className="ml-2 size-4" />
                     </Link>
                   </Button>
