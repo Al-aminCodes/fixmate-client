@@ -60,37 +60,34 @@ function SignInForm() {
         password,
       });
 
-      if (error) {
-        toast.error(error.message || "Invalid email or password");
+      if (error || !data) {
+        toast.error(error?.message || "Invalid email or password");
         return;
       }
 
-      if (data) {
-        toast.success("Welcome back to FixMate!");
+      toast.success("Welcome back to FixMate!");
 
-        // Only allow local application paths.
-        const requestedPath = searchParams.get("redirectTo");
+      const requestedPath = searchParams.get("redirectTo");
 
-        const safeRedirect =
-          requestedPath?.startsWith("/") &&
-          !requestedPath.startsWith("//") &&
-          !requestedPath.startsWith("/\\")
-            ? requestedPath
-            : null;
+      const safeRedirect =
+        requestedPath?.startsWith("/") &&
+        !requestedPath.startsWith("//") &&
+        !requestedPath.startsWith("/\\")
+          ? requestedPath
+          : null;
 
-        const role = data.user.role;
+      const role = data.user.role;
 
-        const dashboard =
-          role === "admin"
-            ? "/dashboard/admin"
-            : role === "technician"
-              ? "/dashboard/technician"
-              : "/dashboard/customer";
+      const dashboard =
+        role === "admin"
+          ? "/dashboard/admin"
+          : role === "technician"
+            ? "/dashboard/technician"
+            : "/dashboard/customer";
 
-        router.replace(safeRedirect || dashboard);
-        router.refresh();
-      }
-    } catch {
+      window.location.replace(safeRedirect || dashboard);
+    } catch (error) {
+      console.error("Login error:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
