@@ -52,12 +52,10 @@ function ServicesContent() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState(search);
-  const [previousSearch, setPreviousSearch] = useState(search);
 
-  if (search !== previousSearch) {
-    setPreviousSearch(search);
+  useEffect(() => {
     setSearchInput(search);
-  }
+  }, [search]);
 
   // Update URL query parameters.
   const updateURL = (key: string, value: string) => {

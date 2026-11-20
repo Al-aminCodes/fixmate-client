@@ -8,8 +8,12 @@ type Props = {
 };
 
 const ServiceDetails = async ({ service }: Props) => {
-  const technician = await getUserByEmail(service.technicianEmail);
-  console.log(technician);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const res = await fetch(`${baseUrl}/user/${service.technicianEmail}`, {
+    cache: "no-store",
+  });
+  const technician = await res.json();
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
