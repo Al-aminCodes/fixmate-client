@@ -68,7 +68,7 @@ export default function MyServicesPage() {
       void Promise.resolve().then(fetchServices);
     }
   }, [user?.role, fetchServices]);
-  //   const loadServices = async () => {
+
   //     try {
   //       const response = await fetch(`${API_URL}/technician/services`, {
   //         headers: {
